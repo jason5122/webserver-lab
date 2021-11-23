@@ -23,8 +23,6 @@
 #include <pthread.h>
 
 #define MAXBUF 8192
-#define THREADS 16
-// #define THREADS 126 // hard limit??
 
 // Send an HTTP request for the specified file
 void *client_send(int fd, char *filename) {
@@ -84,10 +82,10 @@ void *make_request(void *arg) {
 
     /* Open a single connection to the specified host and port */
     int clientfd = open_client_fd_or_die(r->host, r->port);
-    
+
     printf("%d: sending info...\n", r->id);
     client_send(clientfd, r->filename);
-    
+
     pthread_mutex_lock(&mutex);
     client_print(clientfd);
     close_or_die(clientfd);
@@ -99,16 +97,17 @@ void *make_request(void *arg) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc != 4) {
-        fprintf(stderr, "Usage: %s <host> <port> <filename>\n", argv[0]);
+    if (argc < 4) {
+        fprintf(stderr, "Usage: %s <host> <port> <filename>...\n", argv[0]);
         exit(1);
     }
 
+    const int THREADS = argc - 3;
     pthread_t threads[THREADS];
     Request requests[THREADS];
 
     for (int i = 0; i < THREADS; i++) {
-        requests[i] = (Request){argv[1], argv[3], atoi(argv[2]), i};
+        requests[i] = (Request){argv[1], argv[i + 3], atoi(argv[2]), i};
         pthread_create(&threads[i], NULL, make_request, &requests[i]);
     }
 
