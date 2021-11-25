@@ -148,9 +148,6 @@ void request_serve_static(int fd, char *filename, int filesize) {
 }
 
 void request_handle(Request *r) {
-    printf("%s (%d) size: %lld\n", r->filename, r->is_not_found,
-           r->sbuf.st_size);
-
     if (strcasecmp(r->method, "GET")) {
         request_error(r->fd, r->method, "501", "Not Implemented",
                       "server does not implement this method");
@@ -190,13 +187,12 @@ Request request_parse(int fd) {
 
     readline_or_die(fd, buf, MAXBUF);
     sscanf(buf, "%s %s %s", method, uri, version);
-    printf("method:%s uri:%s version:%s\n", method, uri, version);
+    // printf("method:%s uri:%s version:%s\n", method, uri, version);
 
     request_read_headers(fd);
 
     is_static = request_parse_uri(uri, filename, cgiargs);
     is_not_found = stat(filename, &sbuf);
-
-    Request r = {fd, is_static, is_not_found, sbuf, method, filename, cgiargs};
-    return r;
+    return (Request){fd,     is_static, is_not_found, sbuf,
+                     method, filename,  cgiargs};
 }
