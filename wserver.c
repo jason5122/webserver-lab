@@ -45,10 +45,11 @@ void *handle_connection(void *arg) {
         pthread_mutex_unlock(&mutex);
 
         printf("%d: sleeping...\n", c->id);
-        sleep(3); // TODO: remove; tests multithreading
+        // sleep(3); // TODO: remove; tests multithreading
 
         pthread_mutex_lock(&mutex);
-        request_handle(conn_fd);
+        Request r = request_parse(conn_fd);
+        request_handle(&r);
         close_or_die(conn_fd);
 
         pthread_cond_signal(&used);
@@ -75,6 +76,9 @@ void *connect_thread(void *arg) {
         pthread_mutex_lock(&mutex);
         while (count == THREADS)
             pthread_cond_wait(&used, &mutex);
+        
+        // off_t size = request_get_filesize(conn_fd);
+        // printf("%d size: %lld\n", conn_fd, size);
         put(conn_fd);
         pthread_cond_broadcast(&arrived);
 

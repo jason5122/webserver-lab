@@ -69,13 +69,13 @@ typedef struct {
     char *host, *filename;
     int port;
     int id; // TODO: remove; debug use
-} Request;
+} ClientRequest;
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void *make_request(void *arg) {
     pthread_mutex_lock(&mutex);
-    Request *r = (Request *) arg;
+    ClientRequest *r = (ClientRequest *) arg;
 
     printf("%d: opening connection to %s:%d...\n", r->id, r->host, r->port);
     pthread_mutex_unlock(&mutex);
@@ -104,10 +104,10 @@ int main(int argc, char *argv[]) {
 
     const int THREADS = argc - 3;
     pthread_t threads[THREADS];
-    Request requests[THREADS];
+    ClientRequest requests[THREADS];
 
     for (int i = 0; i < THREADS; i++) {
-        requests[i] = (Request){argv[1], argv[i + 3], atoi(argv[2]), i};
+        requests[i] = (ClientRequest){argv[1], argv[i + 3], atoi(argv[2]), i};
         pthread_create(&threads[i], NULL, make_request, &requests[i]);
     }
 
