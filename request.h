@@ -1,5 +1,8 @@
 #ifndef __REQUEST_H__
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 typedef struct {
     int fd, is_static, is_not_found;
     struct stat sbuf;

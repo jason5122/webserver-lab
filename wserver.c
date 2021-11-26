@@ -1,32 +1,29 @@
 #include "io_helper.h"
 #include "request.h"
+#include "request_heap.h"
 #include <pthread.h>
 #include <stdio.h>
 
 #define THREADS 16
 // #define THREADS 126 // hard limit??
 
-typedef struct {
-    int conn_fd;
-    Request request;
-} Connection;
-
-Connection buffer[THREADS];
+MinHeap *heap;
+Request buffer[THREADS];
 int fill = 0;
 int use = 0;
 int count = 0;
 
-void put(Connection c) {
-    buffer[fill] = c;
+void put(Request r) {
+    buffer[fill] = r;
     fill = (fill + 1) % THREADS;
     count++;
 }
 
-Connection get() {
-    Connection c = buffer[use];
+Request get() {
+    Request r = buffer[use];
     use = (use + 1) % THREADS;
     count--;
-    return c;
+    return r;
 }
 
 pthread_cond_t arrived = PTHREAD_COND_INITIALIZER;
@@ -34,18 +31,23 @@ pthread_cond_t used = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void *handle_connection(void *arg) {
+    sleep(5);
+    
     while (1) {
         pthread_mutex_lock(&mutex);
         while (count == 0)
             pthread_cond_wait(&arrived, &mutex);
-        Connection c = get();
+        Request request = get();
+        Request test_request = extract_min(heap);
+        printf("%s size: %lld\n", test_request.filename,
+               test_request.sbuf.st_size);
         pthread_mutex_unlock(&mutex);
 
         // sleep(3); // TODO: remove; tests multithreading
-        request_handle(&c.request);
-        
+        request_handle(&request);
+
         pthread_mutex_lock(&mutex);
-        close_or_die(c.conn_fd);
+        close_or_die(request.fd);
 
         pthread_cond_signal(&used);
 
@@ -69,13 +71,14 @@ void *connect_thread(void *arg) {
         pthread_mutex_lock(&mutex);
         while (count == THREADS)
             pthread_cond_wait(&used, &mutex);
-        
-        Request r = request_parse(conn_fd);
-        put((Connection){conn_fd, r});
-        
-        printf("%s size: %lld\n", r.filename, r.sbuf.st_size);
+
+        Request request = request_parse(conn_fd);
+        put(request);
+        insert(heap, request);
+
+        // printf("%s size: %lld\n", request.filename, request.sbuf.st_size);
         pthread_cond_broadcast(&arrived);
-        
+
         pthread_mutex_unlock(&mutex);
     }
     return NULL;
@@ -101,6 +104,8 @@ int main(int argc, char *argv[]) {
 
     // run out of this directory
     chdir_or_die(root_dir);
+
+    heap = init_heap(THREADS);
 
     pthread_t manager;
     pthread_create(&manager, NULL, connect_thread, &port);
