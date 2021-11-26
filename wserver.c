@@ -42,9 +42,9 @@ void *handle_connection(void *arg) {
         pthread_mutex_unlock(&mutex);
 
         // sleep(3); // TODO: remove; tests multithreading
-
-        pthread_mutex_lock(&mutex);
         request_handle(&c.request);
+        
+        pthread_mutex_lock(&mutex);
         close_or_die(c.conn_fd);
 
         pthread_cond_signal(&used);
