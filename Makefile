@@ -12,7 +12,8 @@ SUBMITDIR = webserverlab
 all: wserver wclient spin.cgi
 
 wserver: wserver.o request.o io_helper.o request_fifo.o request_priority_queue.o
-	$(CC) $(CFLAGS) -o wserver wserver.o request.o io_helper.o request_fifo.o request_priority_queue.o
+	$(CC) $(CFLAGS) -o wserver wserver.o request.o io_helper.o request_fifo.o\
+					   request_priority_queue.o
 
 wclient: wclient.o io_helper.o
 	$(CC) $(CFLAGS) -o wclient wclient.o io_helper.o
@@ -24,11 +25,11 @@ spin.cgi: spin.c
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 clean:
-	-rm -rf $(OBJS) wserver wclient spin.cgi $(SUBMITDIR) $(SUBMITDIR).tar 
+	-rm -rf $(OBJS) wserver wclient spin.cgi $(SUBMITDIR) $(SUBMITDIR).tar
 
 submit: clean
 	-@rm -rf $(SUBMITDIR)
-	-@rm -rf .tmp 
+	-@rm -rf .tmp
 	@mkdir .tmp
 	@cp * .tmp
 	@mv .tmp $(SUBMITDIR)
