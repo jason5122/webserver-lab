@@ -177,8 +177,8 @@ void request_handle(struct request *r) {
 
 // handle a request
 void request_parse(int fd, struct request *r) {
-    int is_static;
-    int is_not_found;
+    bool is_static;
+    bool is_not_found;
     char buf[MAXBUF], uri[MAXBUF], version[MAXBUF];
 
     readline_or_die(fd, buf, MAXBUF);
@@ -189,6 +189,9 @@ void request_parse(int fd, struct request *r) {
 
     is_static = request_parse_uri(uri, r->filename, r->cgiargs);
     is_not_found = stat(r->filename, &r->sbuf);
+    
+    if (is_not_found)
+        r->sbuf.st_size = 0;
     
     r->fd = fd;
     r->is_static = is_static;

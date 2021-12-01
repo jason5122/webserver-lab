@@ -56,7 +56,7 @@ void enqueue(struct priority_queue *pq, struct request key) {
 
     pq->size += 1;
     pq->heap[pq->size - 1] =
-        (struct request){-1, -1, 0, (struct stat){.st_size = INT_MAX}};
+        (struct request){-1, -1, 0, (struct stat){.st_size = LLONG_MAX}};
     increase_key(pq, pq->size - 1, key);
 }
 
