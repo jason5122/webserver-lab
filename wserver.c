@@ -1,30 +1,12 @@
 #include "io_helper.h"
 #include "request.h"
-#include "request_heap.h"
+#include "request_fifo.h"
+#include "request_priority_queue.h"
 #include <pthread.h>
 #include <stdio.h>
 
-#define THREADS 16
-// #define THREADS 126 // hard limit??
-
-MinHeap *heap;
-Request buffer[THREADS];
-int fill = 0;
-int use = 0;
-int count = 0;
-
-void put(Request r) {
-    buffer[fill] = r;
-    fill = (fill + 1) % THREADS;
-    count++;
-}
-
-Request get() {
-    Request r = buffer[use];
-    use = (use + 1) % THREADS;
-    count--;
-    return r;
-}
+Fifo fifo;
+PriorityQueue pq;
 
 pthread_cond_t arrived = PTHREAD_COND_INITIALIZER;
 pthread_cond_t used = PTHREAD_COND_INITIALIZER;
@@ -35,12 +17,12 @@ void *handle_connection(void *arg) {
     
     while (1) {
         pthread_mutex_lock(&mutex);
-        while (count == 0)
+        while (pq.size == 0)
             pthread_cond_wait(&arrived, &mutex);
-        Request request = get();
-        // Request test_request = extract_min(heap);
-        printf("%s size: %lld\n", request.filename,
-               request.sbuf.st_size);
+        Request request = get(&fifo);
+        Request request2 = dequeue(&pq);
+        printf("%s size: %lld\n", request2.filename,
+               request2.sbuf.st_size);
         pthread_mutex_unlock(&mutex);
 
         // sleep(3); // TODO: remove; tests multithreading
@@ -69,15 +51,15 @@ void *connect_thread(void *arg) {
                                     (socklen_t *) &client_len);
 
         pthread_mutex_lock(&mutex);
-        while (count == THREADS)
+        while (pq.size == MAXREQ)
             pthread_cond_wait(&used, &mutex);
         
         Request request;
         request_parse(conn_fd, &request);
         // printf("%s size: %lld\n", request.filename,
         //        request.sbuf.st_size);
-        put(request);
-        // insert(heap, request);
+        put(&fifo, request);
+        enqueue(&pq, request);
 
         printf("%s size: %lld\n", request.filename, request.sbuf.st_size);
         pthread_cond_broadcast(&arrived);
@@ -107,17 +89,18 @@ int main(int argc, char *argv[]) {
 
     // run out of this directory
     chdir_or_die(root_dir);
-
-    heap = init_heap(THREADS);
+    
+    init_fifo(&fifo);
+    init_priority_queue(&pq);
 
     pthread_t manager;
     pthread_create(&manager, NULL, connect_thread, &port);
 
-    pthread_t workers[THREADS];
-    for (int i = 0; i < THREADS; i++)
+    pthread_t workers[MAXREQ];
+    for (int i = 0; i < MAXREQ; i++)
         pthread_create(&workers[i], NULL, handle_connection, NULL);
 
-    for (int i = 0; i < THREADS; i++)
+    for (int i = 0; i < MAXREQ; i++)
         pthread_join(workers[i], NULL);
 
     return 0;

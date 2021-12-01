@@ -1,9 +1,11 @@
 #ifndef __REQUEST_H__
+#define __REQUEST_H__
 
 #include <sys/types.h>
 #include <sys/stat.h>
 
 #define MAXBUF 8192
+#define MAXREQ 8
 
 typedef struct {
     int fd, is_static, is_not_found;
