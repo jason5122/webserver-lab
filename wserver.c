@@ -38,9 +38,9 @@ void *handle_connection(void *arg) {
         while (count == 0)
             pthread_cond_wait(&arrived, &mutex);
         Request request = get();
-        Request test_request = extract_min(heap);
-        printf("%s size: %lld\n", test_request.filename,
-               test_request.sbuf.st_size);
+        // Request test_request = extract_min(heap);
+        printf("%s size: %lld\n", request.filename,
+               request.sbuf.st_size);
         pthread_mutex_unlock(&mutex);
 
         // sleep(3); // TODO: remove; tests multithreading
@@ -71,12 +71,15 @@ void *connect_thread(void *arg) {
         pthread_mutex_lock(&mutex);
         while (count == THREADS)
             pthread_cond_wait(&used, &mutex);
-
-        Request request = request_parse(conn_fd);
+        
+        Request request;
+        request_parse(conn_fd, &request);
+        // printf("%s size: %lld\n", request.filename,
+        //        request.sbuf.st_size);
         put(request);
-        insert(heap, request);
+        // insert(heap, request);
 
-        // printf("%s size: %lld\n", request.filename, request.sbuf.st_size);
+        printf("%s size: %lld\n", request.filename, request.sbuf.st_size);
         pthread_cond_broadcast(&arrived);
 
         pthread_mutex_unlock(&mutex);

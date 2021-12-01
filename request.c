@@ -6,8 +6,6 @@
 // Hopefully this is not a problem ... :)
 //
 
-#define MAXBUF (8192)
-
 void request_error(int fd, char *cause, char *errnum, char *shortmsg,
                    char *longmsg) {
     char buf[MAXBUF], body[MAXBUF];
@@ -178,21 +176,23 @@ void request_handle(Request *r) {
 }
 
 // handle a request
-Request request_parse(int fd) {
+void request_parse(int fd, Request *r) {
     int is_static;
     int is_not_found;
-    struct stat sbuf;
-    char buf[MAXBUF], method[MAXBUF], uri[MAXBUF], version[MAXBUF];
-    char filename[MAXBUF], cgiargs[MAXBUF];
+    // struct stat sbuf;
+    char buf[MAXBUF], uri[MAXBUF], version[MAXBUF];
+    // char method[MAXBUF], filename[MAXBUF], cgiargs[MAXBUF];
 
     readline_or_die(fd, buf, MAXBUF);
-    sscanf(buf, "%s %s %s", method, uri, version);
+    sscanf(buf, "%s %s %s", r->method, uri, version);
     // printf("method:%s uri:%s version:%s\n", method, uri, version);
 
     request_read_headers(fd);
 
-    is_static = request_parse_uri(uri, filename, cgiargs);
-    is_not_found = stat(filename, &sbuf);
-    return (Request){fd,     is_static, is_not_found, sbuf,
-                     method, filename,  cgiargs};
+    is_static = request_parse_uri(uri, r->filename, r->cgiargs);
+    is_not_found = stat(r->filename, &r->sbuf);
+    
+    r->fd = fd;
+    r->is_static = is_static;
+    r->is_not_found = is_not_found;
 }
