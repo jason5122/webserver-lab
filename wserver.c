@@ -5,8 +5,8 @@
 #include <pthread.h>
 #include <stdio.h>
 
-Fifo fifo;
-PriorityQueue pq;
+struct fifo fifo;
+struct priority_queue pq;
 
 pthread_cond_t arrived = PTHREAD_COND_INITIALIZER;
 pthread_cond_t used = PTHREAD_COND_INITIALIZER;
@@ -19,8 +19,8 @@ void *handle_connection(void *arg) {
         pthread_mutex_lock(&mutex);
         while (pq.size == 0)
             pthread_cond_wait(&arrived, &mutex);
-        Request request = get(&fifo);
-        Request request2 = dequeue(&pq);
+        struct request request = get(&fifo);
+        struct request request2 = dequeue(&pq);
         printf("%s size: %lld\n", request2.filename,
                request2.sbuf.st_size);
         pthread_mutex_unlock(&mutex);
@@ -54,14 +54,11 @@ void *connect_thread(void *arg) {
         while (pq.size == MAXREQ)
             pthread_cond_wait(&used, &mutex);
         
-        Request request;
+        struct request request;
         request_parse(conn_fd, &request);
-        // printf("%s size: %lld\n", request.filename,
-        //        request.sbuf.st_size);
         put(&fifo, request);
         enqueue(&pq, request);
-
-        printf("%s size: %lld\n", request.filename, request.sbuf.st_size);
+        
         pthread_cond_broadcast(&arrived);
 
         pthread_mutex_unlock(&mutex);

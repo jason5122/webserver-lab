@@ -145,7 +145,7 @@ void request_serve_static(int fd, char *filename, int filesize) {
     munmap_or_die(srcp, filesize);
 }
 
-void request_handle(Request *r) {
+void request_handle(struct request *r) {
     if (strcasecmp(r->method, "GET")) {
         request_error(r->fd, r->method, "501", "Not Implemented",
                       "server does not implement this method");
@@ -176,12 +176,10 @@ void request_handle(Request *r) {
 }
 
 // handle a request
-void request_parse(int fd, Request *r) {
+void request_parse(int fd, struct request *r) {
     int is_static;
     int is_not_found;
-    // struct stat sbuf;
     char buf[MAXBUF], uri[MAXBUF], version[MAXBUF];
-    // char method[MAXBUF], filename[MAXBUF], cgiargs[MAXBUF];
 
     readline_or_die(fd, buf, MAXBUF);
     sscanf(buf, "%s %s %s", r->method, uri, version);

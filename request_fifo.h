@@ -3,15 +3,15 @@
 
 #include "request.h"
 
-typedef struct {
+struct fifo {
     int fill, use, size;
-    Request buffer[MAXREQ];
-} Fifo;
+    struct request buffer[MAXREQ];
+};
 
-void init_fifo(Fifo *f);
+void init_fifo(struct fifo *f);
 
-void put(Fifo *f, Request r);
+void put(struct fifo *f, struct request r);
 
-Request get(Fifo *f);
+struct request get(struct fifo *f);
 
 #endif // __REQUEST_FIFO_H__
