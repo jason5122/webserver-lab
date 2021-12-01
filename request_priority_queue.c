@@ -31,7 +31,7 @@ void min_heapify(struct priority_queue *pq, int i) {
     }
 }
 
-void increase_key(struct priority_queue *pq, int i, struct request key) {
+void decrease_key(struct priority_queue *pq, int i, struct request key) {
     if (key.sbuf.st_size > pq->heap[i].sbuf.st_size) {
         fprintf(stderr, "error: new key is larger than current key");
         exit(1);
@@ -57,7 +57,7 @@ void enqueue(struct priority_queue *pq, struct request key) {
     pq->size += 1;
     pq->heap[pq->size - 1] =
         (struct request){-1, -1, 0, (struct stat){.st_size = LLONG_MAX}};
-    increase_key(pq, pq->size - 1, key);
+    decrease_key(pq, pq->size - 1, key);
 }
 
 struct request dequeue(struct priority_queue *pq) {
