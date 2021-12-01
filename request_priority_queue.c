@@ -3,11 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// void swap(struct request *heap, int i, int j) {
-//     struct request tmp = heap[i];
-//     heap[i] = heap[j];
-//     heap[j] = tmp;
-// }
+void swap(struct priority_queue *pq, int i, int j) {
+    struct request tmp = pq->heap[i];
+    pq->heap[i] = pq->heap[j];
+    pq->heap[j] = tmp;
+}
 
 void init_priority_queue(struct priority_queue *pq) { pq->size = 0; }
 
@@ -23,10 +23,7 @@ void min_heapify(struct priority_queue *pq, int i) {
         largest = r;
 
     if (largest != i) {
-        // swap(pq->heap, i, largest);
-        struct request tmp = pq->heap[i];
-        pq->heap[i] = pq->heap[largest];
-        pq->heap[largest] = tmp;
+        swap(pq, i, largest);
         min_heapify(pq, largest);
     }
 }
@@ -40,10 +37,7 @@ void decrease_key(struct priority_queue *pq, int i, struct request key) {
     pq->heap[i] = key;
     while (i > 0 &&
            pq->heap[PARENT(i)].sbuf.st_size > pq->heap[i].sbuf.st_size) {
-        // swap(pq->heap, i, PARENT(i));
-        struct request tmp = pq->heap[i];
-        pq->heap[i] = pq->heap[PARENT(i)];
-        pq->heap[PARENT(i)] = tmp;
+        swap(pq, i, PARENT(i));
         i = PARENT(i);
     }
 }
