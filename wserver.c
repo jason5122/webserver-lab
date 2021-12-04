@@ -25,7 +25,7 @@ void *handle_connection(void *arg) {
         pthread_mutex_unlock(&mutex);
 
         // sleep(3); // TODO: remove; tests multithreading
-        request_handle(&request);
+        request_handle(&request2);
 
         pthread_mutex_lock(&mutex);
         close_or_die(request.fd);
@@ -80,6 +80,7 @@ int main(int argc, char *argv[]) {
 
         struct request request;
         request_parse(conn_fd, &request);
+        
         put(&fifo, request);
         enqueue(&pq, request);
 

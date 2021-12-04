@@ -151,6 +151,12 @@ void request_handle(struct request *r) {
                       "server does not implement this method");
         return;
     }
+    
+    if (r->is_forbidden) {
+        request_error(r->fd, r->method, "403", "Forbidden",
+                      "server does not have access to this file");
+        return;
+    }
 
     if (r->is_not_found) {
         request_error(r->fd, r->filename, "404", "Not found",
@@ -192,6 +198,10 @@ void request_parse(int fd, struct request *r) {
     
     if (is_not_found)
         r->sbuf.st_size = 0;
+    else if (strstr(r->filename, "..")) {
+        r->is_forbidden = true;
+        r->sbuf.st_size = 0;
+    }
     
     r->fd = fd;
     r->is_static = is_static;

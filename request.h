@@ -9,7 +9,7 @@
 
 struct request {
     int fd;
-    bool is_static, is_not_found;
+    bool is_static, is_not_found, is_forbidden;
     struct stat sbuf;
     char method[MAXBUF], filename[MAXBUF], cgiargs[MAXBUF];
 };
