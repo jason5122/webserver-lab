@@ -65,7 +65,7 @@ void *client_print(int fd) {
     return NULL;
 }
 
-struct client_request {
+struct client_thread {
     char *host, *filename;
     int port;
     int id; // TODO: remove; debug use
@@ -75,7 +75,7 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void *make_request(void *arg) {
     pthread_mutex_lock(&mutex);
-    struct client_request *r = (struct client_request *) arg;
+    struct client_thread *r = (struct client_thread *) arg;
 
     printf("%d: opening connection to %s:%d...\n", r->id, r->host, r->port);
     pthread_mutex_unlock(&mutex);
@@ -83,7 +83,7 @@ void *make_request(void *arg) {
     /* Open a single connection to the specified host and port */
     int clientfd = open_client_fd_or_die(r->host, r->port);
 
-    printf("%d: sending info...\n", r->id);
+    printf("%d, %s: sending info...\n", r->id, r->filename);
     client_send(clientfd, r->filename);
 
     pthread_mutex_lock(&mutex);
@@ -104,10 +104,10 @@ int main(int argc, char *argv[]) {
 
     const int THREADS = argc - 3;
     pthread_t threads[THREADS];
-    struct client_request requests[THREADS];
+    struct client_thread requests[THREADS];
 
     for (int i = 0; i < THREADS; i++) {
-        requests[i] = (struct client_request){argv[1], argv[i + 3], atoi(argv[2]), i};
+        requests[i] = (struct client_thread){argv[1], argv[i + 3], atoi(argv[2]), i};
         pthread_create(&threads[i], NULL, make_request, &requests[i]);
     }
 

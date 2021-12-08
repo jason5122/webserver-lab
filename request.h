@@ -12,12 +12,11 @@ struct request {
     bool is_static, is_not_found, is_forbidden;
     struct stat sbuf;
     char method[MAXBUF], filename[MAXBUF], cgiargs[MAXBUF];
+    struct request *next;
 };
 
 void request_parse(int fd, struct request *r);
 
 void request_handle(struct request *r);
-
-off_t request_get_filesize(int fd);
 
 #endif // __REQUEST_H__

@@ -4,16 +4,18 @@
 
 CC = gcc
 CFLAGS = -Wall -Wno-format-overflow
-OBJS = wserver.o wclient.o request.o io_helper.o request_fifo.o request_priority_queue.o
+OBJS = wserver.o wclient.o request.o io_helper.o request_fifo.o\
+	   request_priority_queue.o request_ultra.o
 SUBMITDIR = webserverlab
 
 .SUFFIXES: .c .o
 
 all: wserver wclient spin.cgi
 
-wserver: wserver.o request.o io_helper.o request_fifo.o request_priority_queue.o
+wserver: wserver.o request.o io_helper.o request_fifo.o\
+		 request_priority_queue.o request_ultra.o
 	$(CC) $(CFLAGS) -o wserver wserver.o request.o io_helper.o request_fifo.o\
-					   request_priority_queue.o
+					   request_priority_queue.o request_ultra.o
 
 wclient: wclient.o io_helper.o
 	$(CC) $(CFLAGS) -o wclient wclient.o io_helper.o
