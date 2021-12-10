@@ -65,34 +65,40 @@ void *client_print(int fd) {
     return NULL;
 }
 
-struct client_thread {
+typedef struct __client_t {
     char *host, *filename;
     int port;
-    int id; // TODO: remove; debug use
-};
+    int state;
+} client_t;
 
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+int state = 0;
 
 void *make_request(void *arg) {
     pthread_mutex_lock(&mutex);
-    struct client_thread *r = (struct client_thread *) arg;
+    client_t *r = (client_t *) arg;
+    while (state < r->state)
+        pthread_cond_wait(&cond, &mutex);
 
-    printf("%d: opening connection to %s:%d...\n", r->id, r->host, r->port);
+    // printf("%d: opening connection to %s:%d...\n", r->state, r->host, r->port);
     pthread_mutex_unlock(&mutex);
 
-    /* Open a single connection to the specified host and port */
     int clientfd = open_client_fd_or_die(r->host, r->port);
-
-    printf("%d, %s: sending info...\n", r->id, r->filename);
+    // printf("%d, %s: sending info...\n", r->state, r->filename);
+    
+    state++;
+    pthread_cond_broadcast(&cond);
+    
     client_send(clientfd, r->filename);
 
-    pthread_mutex_lock(&mutex);
+    // pthread_mutex_lock(&mutex);
     client_print(clientfd);
     close_or_die(clientfd);
 
-    printf("%d: closing connection\n", r->id);
+    printf("%d, %s: closing connection\n", r->state, r->filename);
 
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
     return NULL;
 }
 
@@ -104,10 +110,10 @@ int main(int argc, char *argv[]) {
 
     const int THREADS = argc - 3;
     pthread_t threads[THREADS];
-    struct client_thread requests[THREADS];
+    client_t requests[THREADS];
 
     for (int i = 0; i < THREADS; i++) {
-        requests[i] = (struct client_thread){argv[1], argv[i + 3], atoi(argv[2]), i};
+        requests[i] = (client_t){argv[1], argv[i + 3], atoi(argv[2]), i};
         pthread_create(&threads[i], NULL, make_request, &requests[i]);
     }
 

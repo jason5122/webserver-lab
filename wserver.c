@@ -1,13 +1,8 @@
 #include "io_helper.h"
 #include "request.h"
-// #include "request_fifo.h"
-// #include "request_priority_queue.h"
-#include "request_ultra.h"
+#include "request_queue.h"
 #include <pthread.h>
 #include <stdio.h>
-
-// struct fifo fifo;
-// struct priority_queue pq;
 
 int max_buffer_size;
 struct node *head;
@@ -18,25 +13,20 @@ pthread_cond_t used = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void *handle_connection(void *arg) {
-    sleep(5);
-
     while (true) {
         pthread_mutex_lock(&mutex);
         while (request_count == 0)
             pthread_cond_wait(&arrived, &mutex);
-        // struct request request = get(&fifo);
-        // struct request request2 = dequeue(&pq);
-        struct request request3 = pop(&head);
+        struct request request = pop(&head);
         request_count--;
-        // printf("%s size: %lld\n", request2.filename, request2.sbuf.st_size);
-        // printf("%s size: %lld\n", request3.filename, request3.sbuf.st_size);
+        // printf("%s size: %lld\n", request.filename, request.sbuf.st_size);
         pthread_mutex_unlock(&mutex);
 
         // sleep(3); // TODO: remove; tests multithreading
-        request_handle(&request3);
+        request_handle(&request);
 
         pthread_mutex_lock(&mutex);
-        close_or_die(request3.fd);
+        close_or_die(request.fd);
 
         pthread_cond_signal(&used);
 
@@ -79,8 +69,6 @@ int main(int argc, char *argv[]) {
 
     chdir_or_die(root_dir);
 
-    // init_fifo(&fifo);
-    // init_priority_queue(&pq);
     head = NULL;
     request_count = 0;
 
@@ -104,9 +92,6 @@ int main(int argc, char *argv[]) {
 
         struct request request;
         request_parse(conn_fd, &request);
-
-        // put(&fifo, request);
-        // enqueue(&pq, request);
 
         if (strcmp(schedalg, "FIFO") == 0)
             push(&head, request);

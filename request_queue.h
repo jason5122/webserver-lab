@@ -1,5 +1,5 @@
-#ifndef __REQUEST_ULTRA_H__
-#define __REQUEST_ULTRA_H__
+#ifndef __REQUEST_QUEUE_H__
+#define __REQUEST_QUEUE_H__
 
 #include "request.h"
 
@@ -14,4 +14,4 @@ void push_ordered(struct node **head, struct request request);
 
 struct request pop(struct node **head);
 
-#endif // __REQUEST_ULTRA_H__
+#endif // __REQUEST_QUEUE_H__
