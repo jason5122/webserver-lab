@@ -21,10 +21,9 @@ void *handle_connection(void *arg) {
         request_count--;
         // printf("%s size: %lld\n", request.filename, request.sbuf.st_size);
         pthread_mutex_unlock(&mutex);
-
-        // sleep(3); // TODO: remove; tests multithreading
+        
         request_handle(&request);
-
+        
         pthread_mutex_lock(&mutex);
         close_or_die(request.fd);
 
@@ -98,7 +97,7 @@ int main(int argc, char *argv[]) {
         else
             push_ordered(&head, request);
         request_count++;
-        printf("%s size: %lld\n", request.filename, request.sbuf.st_size);
+        // printf("%s size: %lld\n", request.filename, request.sbuf.st_size);
 
         pthread_cond_broadcast(&arrived);
 

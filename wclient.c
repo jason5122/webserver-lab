@@ -1,24 +1,3 @@
-//
-// client.c: A very, very primitive HTTP client.
-//
-// To run, try:
-//      client hostname portnumber filename
-//
-// Sends one HTTP request to the specified HTTP server.
-// Prints out the HTTP response.
-//
-// For testing your server, you will want to modify this client.
-// For example:
-// You may want to make this multi-threaded so that you can
-// send many requests simultaneously to the server.
-//
-// You may also want to be able to request different URIs;
-// you may want to get more URIs from the command line
-// or read the list from a file.
-//
-// When we test your server, we will be using modifications to this client.
-//
-
 #include "io_helper.h"
 #include <pthread.h>
 
@@ -48,12 +27,6 @@ void *client_print(int fd) {
     while (strcmp(buf, "\r\n") && (n > 0)) {
         printf("Header: %s", buf);
         n = readline_or_die(fd, buf, MAXBUF);
-
-        // If you want to look for certain HTTP tags...
-        // int length = 0;
-        // if (sscanf(buf, "Content-Length: %d ", &length) == 1) {
-        //    printf("Length = %d\n", length);
-        //}
     }
 
     // Read and display the HTTP Body
@@ -81,24 +54,25 @@ void *make_request(void *arg) {
     while (state < r->state)
         pthread_cond_wait(&cond, &mutex);
 
-    // printf("%d: opening connection to %s:%d...\n", r->state, r->host, r->port);
-    pthread_mutex_unlock(&mutex);
+    // printf("%d: opening connection to %s:%d...\n", r->state, r->host,
+    // r->port);
 
     int clientfd = open_client_fd_or_die(r->host, r->port);
     // printf("%d, %s: sending info...\n", r->state, r->filename);
-    
+
+    client_send(clientfd, r->filename);
     state++;
     pthread_cond_broadcast(&cond);
-    
-    client_send(clientfd, r->filename);
 
-    // pthread_mutex_lock(&mutex);
+    pthread_mutex_unlock(&mutex);
     client_print(clientfd);
+    pthread_mutex_lock(&mutex);
+
     close_or_die(clientfd);
 
-    printf("%d, %s: closing connection\n", r->state, r->filename);
+    // printf("%d, %s: closing connection\n\n", r->state, r->filename);
 
-    // pthread_mutex_unlock(&mutex);
+    pthread_mutex_unlock(&mutex);
     return NULL;
 }
 

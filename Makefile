@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wno-format-overflow
+CFLAGS = -std=c11 -Wall -Wno-format-overflow
 OBJS = wserver.o wclient.o request.o io_helper.o request_queue.o
 SUBMITDIR = webserverlab
 
